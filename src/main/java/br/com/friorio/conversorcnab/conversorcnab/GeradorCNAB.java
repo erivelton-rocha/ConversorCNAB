@@ -6,13 +6,38 @@ package br.com.friorio.conversorcnab.conversorcnab;
 
 import java.io.File;
 import java.io.IOException;
+import javax.swing.JTable;
 
 /**
  *
  * @author ANALISTA_SISTEMA
  */
 public interface GeradorCNAB {
-  
 
-    public void gerarArquivoCNAB(File arquivoExcel, String caminhoSaida);
+    // Getters
+    /**
+     *
+     * @return Quantidade de titulos.
+     */
+    int getQtdTitulos();
+
+    /**
+     * 
+     * @return Valor total normal
+     */
+    double getValorTitulos();
+
+    /**
+     *
+     * @return Valor Total pago.
+     */
+    double getTotalVlrTitulos();
+
+    /**
+     * 
+     * @return Total de mora de juros
+     */
+    double getTotalEncargos();
+
+    public void gerarArquivoCNAB(File arquivoExcel, String caminhoSaida, JTable tabela);
 }

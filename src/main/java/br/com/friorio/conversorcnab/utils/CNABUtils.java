@@ -20,7 +20,7 @@ public class CNABUtils {
      * @param tipoValor 'N' para numérico, 'A' para alfanumérico.
      * @return String formatada conforme as especificações.
      */
-    public static String preencherCampo(Object valor, int tamanho, char alinhamento, char preenchimento, ETipoValor tipoValor) {
+    public static String preencherCampo(Object valor, int tamanho, char alinhamento, char preenchimento, char tipoValor) {
         String valorStr = (valor == null) ? "" : valor.toString();
 
         // Trunca o valor se for maior que o tamanho especificado
@@ -47,7 +47,7 @@ public class CNABUtils {
         }
 
         // Para valores numéricos, garante que só existam dígitos
-        if (tipoValor == ETipoValor.NUMBER) {
+        if (tipoValor == 'N') {
             String resultadoStr = resultado.toString();
             StringBuilder apenasNumeros = new StringBuilder();
             for (int i = 0; i < resultadoStr.length(); i++) {
@@ -62,8 +62,8 @@ public class CNABUtils {
         return resultado.toString();
     }
     
-    public enum ETipoValor{
-    NUMBER,
-    STRING;
-}
+//    public enum ETipoValor{
+//    NUMBER,
+//    STRING;
+//}
 }

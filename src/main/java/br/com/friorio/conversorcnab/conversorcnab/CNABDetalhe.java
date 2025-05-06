@@ -5,7 +5,7 @@
 package br.com.friorio.conversorcnab.conversorcnab;
 
 import java.time.LocalDate;
-
+import br.com.friorio.conversorcnab.utils.CNABUtils;
 /**
  *
  * @author ANALISTA_SISTEMA
@@ -13,10 +13,10 @@ import java.time.LocalDate;
 public class CNABDetalhe {
     public static final Integer ID_REGISTRO = 1;
     public static final Integer TIPO_INSCRICAO = 2; // 01- CPF / 02-CNPJ
-    private String documento; // pos 41 - size 6
-    private String serie; //serie  / pos 47-48 - size 1
-    private String parcela; // pos 48 - size 2
-    private String idbanco; //identificacao do titulo pos 71-82 - size 12
+    private String documento; // pos 41 a 49 - size 9
+//    private String serie; //serie  / pos 47-48 - size 1
+//    private String parcela; // pos 48 - size 2
+    private int tpnabco; //identificacao do titulo pos 71-82 - size 12
     private String tpnaocor; // pos 109 - size 2
     private LocalDate tpnadpag; // data ocorrenci no banco / pos 111 - size 6 DDMMAA
     private LocalDate tpnavenc; // data vencimento / pos 147-152 - size 6 DDMMAA
@@ -29,11 +29,10 @@ public class CNABDetalhe {
     private LocalDate tpnadcrd; // / pos 296 - size 6 DDMMAA
     private String tpnamotv; // motivo da rejeicao / pos 319 - size 2
 
-    public CNABDetalhe(String documento, String serie, String parcela, String idbanco, String tpnaocor, LocalDate tpnadpag, LocalDate tpnavenc, Double valorTitulo, Double tpandsp, Double tpnaodsp, Double tpnaabat, Double tpnavalo, Double tpnajuro, LocalDate tpnadcrd, String tpnamotv) {
+    public CNABDetalhe(String documento, int idbanco, String tpnaocor, LocalDate tpnadpag, LocalDate tpnavenc, Double valorTitulo, Double tpandsp, Double tpnaodsp, Double tpnaabat, Double tpnavalo, Double tpnajuro, LocalDate tpnadcrd, String tpnamotv) {
         this.documento = documento;
-        this.serie = serie;
-        this.parcela = parcela;
-        this.idbanco = idbanco;
+       
+        this.tpnabco = idbanco;
         this.tpnaocor = tpnaocor;
         this.tpnadpag = tpnadpag;
         this.tpnavenc = tpnavenc;
@@ -57,29 +56,29 @@ public class CNABDetalhe {
     public void setDocumento(String documento) {
         this.documento = documento;
     }
+//
+//    public String getSerie() {
+//        return serie;
+//    }
+//
+//    public void setSerie(String serie) {
+//        this.serie = serie;
+//    }
+//
+//    public String getParcela() {
+//        return parcela;
+//    }
+//
+//    public void setParcela(String parcela) {
+//        this.parcela = parcela;
+//    }
 
-    public String getSerie() {
-        return serie;
+    public int getTpnabco() {
+        return tpnabco;
     }
 
-    public void setSerie(String serie) {
-        this.serie = serie;
-    }
-
-    public String getParcela() {
-        return parcela;
-    }
-
-    public void setParcela(String parcela) {
-        this.parcela = parcela;
-    }
-
-    public String getIdbanco() {
-        return idbanco;
-    }
-
-    public void setIdbanco(String idbanco) {
-        this.idbanco = idbanco;
+    public void setTpnabco(int tpnabco) {
+        this.tpnabco = tpnabco;
     }
 
     public String getTpnaocor() {
@@ -94,22 +93,38 @@ public class CNABDetalhe {
         return tpnadpag;
     }
 
+    /**
+     * Data pagamento.
+     * @param tpnadpag 
+     */
     public void setTpnadpag(LocalDate tpnadpag) {
         this.tpnadpag = tpnadpag;
     }
 
+    /**
+     * 
+     * @return data vencimento.
+     */
     public LocalDate getTpnavenc() {
         return tpnavenc;
     }
 
+    /**
+     * Data vencimento.
+     * @param tpnavenc 
+     */
     public void setTpnavenc(LocalDate tpnavenc) {
         this.tpnavenc = tpnavenc;
     }
 
+    /*
+    * @return Valor do titulo.
+    */
     public Double getValorTitulo() {
         return valorTitulo;
     }
 
+    
     public void setValorTitulo(Double valorTitulo) {
         this.valorTitulo = valorTitulo;
     }
@@ -166,11 +181,23 @@ public class CNABDetalhe {
         return tpnamotv;
     }
 
+    
     public void setTpnamotv(String tpnamotv) {
         this.tpnamotv = tpnamotv;
     }
     
     
-    
+    public String generateDetalhe(){
+        
+        StringBuilder detalhe = new StringBuilder();
+        
+        // pos 1 ID_REGISTRO
+        detalhe.append(CNABUtils.preencherCampo(ID_REGISTRO, 1, 'D', '0', 'N'));
+        // 01- CPF / 02-CNPJ
+        
+        // documento pos 41 a 49 - size 9
+        
+        return null;
+    }
     
 }
