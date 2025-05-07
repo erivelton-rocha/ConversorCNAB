@@ -4,6 +4,7 @@
  */
 package br.com.friorio.conversorcnab.conversorcnab;
 
+import br.com.friorio.conversorcnab.utils.CNABUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -12,7 +13,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTable;
@@ -25,16 +28,17 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-/**
- *
- * @author ANALISTA_SISTEMA
- */
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class GeradorCNABHarpia implements GeradorCNAB {
 
     private int qtdTitulos;
     private double valorTitulos;
     private double totalVlrTitulos;
     private double totalEncargos;
+    private final int COD_FIDC = 161;
+    private final int COD_BANCO = 4690322;
 
     /*
     * @return Quantidade total de titulos
@@ -93,12 +97,15 @@ public class GeradorCNABHarpia implements GeradorCNAB {
             tableModel.setRowCount(0); // Limpa a tabela antes de adicionar novos
 
             // Define novos títulos para as colunas
-            String[] novosTitulos = {"Sacado", "Documento", "Vencimento", "Valor", "Encargos", "Valor Pago", "Data Pagamento", "Tipo Liquidação"};
+            String[] novosTitulos = {"Sacado", "Empresa", "Documento", "Nro Bancario", "Vencimento", "Valor", "Encargos", "Valor Pago", "Data Pagamento", "Tipo Liquidação"};
             tableModel.setColumnIdentifiers(novosTitulos);
+
+            // var para registrar os detalhes
+            StringBuilder registroDetalhe = new StringBuilder();
 
             // Total de titulos
             this.qtdTitulos = sheet.getLastRowNum();
-
+            List<String> detalhesList = new ArrayList<>();
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
 
@@ -107,29 +114,78 @@ public class GeradorCNABHarpia implements GeradorCNAB {
 
                     String sacado = getCellValueAsString(row.getCell(0));
                     String documento = getCellValueAsString(row.getCell(1));
+
+                    // numero do titulo (sem serie e parcela)
+                    String titulo = documento.substring(0, 6);
                     LocalDate vencimento = getCellValueAsDate(row.getCell(2));
                     double valor = getCellValueAsDouble(row.getCell(3));
                     // somar os valores de titulos
                     this.valorTitulos += valor;
                     double encargos = getCellValueAsDouble(row.getCell(4));
+                    encargos = formatarDecimais(encargos, 2);
                     // somar os encargos
                     this.totalEncargos += encargos;
-                    double valorPago = valor - encargos;
+                    double valorPago = calcularValorPago(valor, encargos);
                     // somar valr pago
                     this.totalVlrTitulos += valorPago;
                     LocalDate dataPagamento = getCellValueAsDate(row.getCell(5));
                     String tipoLiquidacao = getCellValueAsString(row.getCell(6));
 
+                    // pesquisar empresa e numero bancario
+                    CNABUtils.getTituloInfo(titulo, COD_FIDC);
+
+                    // empresa
+                    String empresa;
+                    empresa = CNABUtils.info != null ? CNABUtils.info.getEmpresa() : "000";
+                    // numero bancario
+                    String numeroBancario;
+                    numeroBancario = CNABUtils.info != null ? CNABUtils.info.getNumeroBancario() : "XXXXXXX";
+
                     // Preencher tabela
                     // Adiciona uma nova linha ao modelo da tabela
-                    tableModel.addRow(new Object[]{sacado, documento, vencimento, valor, encargos, valorPago, dataPagamento, tipoLiquidacao});
+                    tableModel.addRow(new Object[]{sacado, empresa, documento, numeroBancario, vencimento, valor, encargos, valorPago, dataPagamento, tipoLiquidacao});
                     // Exemplo: imprimir os valores
                     System.out.println("Sacado: " + sacado + ", Documento: " + documento
                             + ", Vencimento: " + vencimento + ", Valor: " + valor
                             + ", Encargos: " + encargos + ", data Pagamento: " + dataPagamento
                             + ", valor pago: " + valorPago + ", Tipo Liquidação: " + tipoLiquidacao);
+
+                    // gerar detalhe cnab
+                    CNABDetalhe detalhe;
+                    detalhe = new CNABDetalhe(
+                            documento,
+                            "3",
+                            COD_BANCO,
+                            0,
+                            vencimento,
+                            vencimento,
+                            valor,
+                            0.0,
+                            0.0,
+                            0.0,
+                            valorPago,
+                            encargos,
+                            dataPagamento,
+                            0);
+
+                    // armazenar o registro
+                    detalhesList.add(detalhe.generateDetalhe());
+
                 }
             }
+            registroDetalhe.append(String.join(System.lineSeparator(), detalhesList));
+
+            System.out.println("----------------------- iniciar registros -----------------------");
+            // Gerar cabeçalho
+            System.out.println(CNABHeader.generateHeader());
+
+            // registrar detalhe
+            System.out.println(registroDetalhe);
+            // gerar trailer do registro
+            CNABTrailer trailer = new CNABTrailer(this.qtdTitulos, this.valorTitulos);
+            System.out.println(trailer.generateTrailer());
+
+            System.out.println("----------------------- fim registros -----------------------");
 
         } catch (FileNotFoundException ex) {
             Logger.getLogger(GeradorCNABHarpia.class.getName()).log(Level.SEVERE, null, ex);
@@ -189,9 +245,26 @@ public class GeradorCNABHarpia implements GeradorCNAB {
             // Se a conversão falhar, retorna a data padrão
             return LocalDate.of(1990, 1, 1);
         } catch (Exception e) {
-            // Tratamento de erro genérico caso ocorra algo inesperado
-            e.printStackTrace();
+// Tratamento de erro genérico caso ocorra algo inesperado
             return LocalDate.of(1990, 1, 1);
         }
+    }
+
+    public static double calcularValorPago(double valor, double encargos) {
+        BigDecimal valorPago = BigDecimal.valueOf(valor - encargos).setScale(2, RoundingMode.HALF_UP);
+
+        return valorPago.doubleValue();
+    }
+    
+    /**
+     * Formatar casas decimais.
+     * @param valor - valor
+     * @param decimais - numero de casas decimais
+     * @return novo numero
+     */
+    public static double formatarDecimais(double valor, int decimais){
+       BigDecimal novoValor = BigDecimal.valueOf(valor).setScale(decimais, RoundingMode.HALF_UP);
+        
+        return novoValor.doubleValue();
     }
 }

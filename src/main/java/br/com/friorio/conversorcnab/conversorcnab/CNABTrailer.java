@@ -12,7 +12,7 @@ import br.com.friorio.conversorcnab.utils.CNABUtils;
  */
 public class CNABTrailer {
 
-    private final int ID_REGISTRO = 9; // pos 1 a 1 size(1)
+    private static final int ID_REGISTRO = 9; // pos 1 a 1 size(1)
     private final int ID_RETORNO = 2; // pos 2 a 2 size(1)
     private final int ID_TIPO_REGISTRO = 1; // pos 3 a 4 size(2)
     private final int COD_BANCO = 237; // pos 5 a 7 size(3)
@@ -53,7 +53,7 @@ public class CNABTrailer {
     *
     * @return A linha de trailer formatada com string.
     */
-    public String generateTrailer() {
+    public  String generateTrailer() {
         StringBuilder trailer = new StringBuilder();
 
         trailer.append(CNABUtils.preencherCampo(ID_REGISTRO, 1, 'D', '0', 'N'));
