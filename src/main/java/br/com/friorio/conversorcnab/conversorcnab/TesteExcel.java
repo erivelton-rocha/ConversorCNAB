@@ -14,35 +14,9 @@ import java.io.IOException;
 public class TesteExcel {
     
     public static void main(String[] args) throws IOException{
-//        try{
-//        FileInputStream file = new FileInputStream("src/main/java/resources/Liquidações 10-04.xlsx");
-//        
-//        Workbook wb = new XSSFWorkbook(file);
-//        
-//        Sheet sheet = wb.getSheetAt(0);
-//        
-//        for(Row row: sheet){
-//            
-//            for(Cell cell: row){
-//                System.out.println(cell.toString()+"\t"); 
-//            }
-//            System.out.println();
-//        }
-//        
-//        wb.close();
-//        file.close();
-//        }catch(Exception e){
-//            e.printStackTrace();
-//        }
-//        
+        EBanco banco = EBanco.BANCO_HARPIA;
+        
+        FabricaGeradorCNAB fabrica = (FabricaGeradorCNAB) FabricaGeradorCNAB.criarGerador(banco);
 
-
-    
-
-    ReadExcel readExcel = new ReadExcel();
-    
-    String path = "src/main/java/resources/Liquidações 10-04.xlsx";
-    
-    readExcel.readExcelDataForSingleRow(path);
     }
 }

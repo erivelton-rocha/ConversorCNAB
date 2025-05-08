@@ -64,7 +64,6 @@ public class ConversorCNABGUI extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Conversor CNAB");
         setMaximumSize(new java.awt.Dimension(780, 780));
-        setMinimumSize(null);
         setName("frmPrincipal"); // NOI18N
         setPreferredSize(new java.awt.Dimension(747, 700));
         setResizable(false);

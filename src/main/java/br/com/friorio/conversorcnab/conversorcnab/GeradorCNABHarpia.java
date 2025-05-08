@@ -16,8 +16,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import org.apache.poi.ss.usermodel.Cell;
@@ -30,8 +29,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import org.apache.log4j.Logger;
 
 public class GeradorCNABHarpia implements GeradorCNAB {
+
+    private static final Logger logger = Logger.getLogger(CNABUtils.class.getName());
 
     private int qtdTitulos;
     private double valorTitulos;
@@ -106,7 +108,9 @@ public class GeradorCNABHarpia implements GeradorCNAB {
             // Total de titulos
             this.qtdTitulos = sheet.getLastRowNum();
             List<String> detalhesList = new ArrayList<>();
+            int seq = 0;
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                seq = i++; // registro começa em 2
                 Row row = sheet.getRow(i);
 
                 // Verifica se a linha não é nula
@@ -117,6 +121,7 @@ public class GeradorCNABHarpia implements GeradorCNAB {
 
                     // numero do titulo (sem serie e parcela)
                     String titulo = documento.substring(0, 6);
+
                     LocalDate vencimento = getCellValueAsDate(row.getCell(2));
                     double valor = getCellValueAsDouble(row.getCell(3));
                     // somar os valores de titulos
@@ -139,13 +144,13 @@ public class GeradorCNABHarpia implements GeradorCNAB {
                     empresa = CNABUtils.info != null ? CNABUtils.info.getEmpresa() : "000";
                     // numero bancario
                     String numeroBancario;
-                    numeroBancario = CNABUtils.info != null ? CNABUtils.info.getNumeroBancario() : "XXXXXXX";
+                    numeroBancario = CNABUtils.info != null ? CNABUtils.info.getNumeroBancario() : "XXXX";
 
                     // Preencher tabela
                     // Adiciona uma nova linha ao modelo da tabela
                     tableModel.addRow(new Object[]{sacado, empresa, documento, numeroBancario, vencimento, valor, encargos, valorPago, dataPagamento, tipoLiquidacao});
                     // Exemplo: imprimir os valores
-                    System.out.println("Sacado: " + sacado + ", Documento: " + documento
+                    logger.info("Sacado: " + sacado + ", Documento: " + documento + ", Numero bancario: " + numeroBancario
                             + ", Vencimento: " + vencimento + ", Valor: " + valor
                             + ", Encargos: " + encargos + ", data Pagamento: " + dataPagamento
                             + ", valor pago: " + valorPago + ", Tipo Liquidação: " + tipoLiquidacao);
@@ -153,9 +158,9 @@ public class GeradorCNABHarpia implements GeradorCNAB {
                     // gerar detalhe cnab
                     CNABDetalhe detalhe;
                     detalhe = new CNABDetalhe(
+                            empresa,
                             documento,
-                            "3",
-                            COD_BANCO,
+                            numeroBancario,
                             0,
                             vencimento,
                             vencimento,
@@ -166,7 +171,8 @@ public class GeradorCNABHarpia implements GeradorCNAB {
                             valorPago,
                             encargos,
                             dataPagamento,
-                            0);
+                            0,
+                            seq);
 
                     // armazenar o registro
                     detalhesList.add(detalhe.generateDetalhe());
@@ -175,22 +181,22 @@ public class GeradorCNABHarpia implements GeradorCNAB {
             }
             registroDetalhe.append(String.join(System.lineSeparator(), detalhesList));
 
-            System.out.println("----------------------- iniciar registros -----------------------");
+            logger.info("----------------------- iniciar registros -----------------------");
             // Gerar cabeçalho
-            System.out.println(CNABHeader.generateHeader());
+            logger.info(CNABHeader.generateHeader());
 
             // registrar detalhe
-            System.out.println(registroDetalhe);
+            logger.info(registroDetalhe);
             // gerar trailer do registro
             CNABTrailer trailer = new CNABTrailer(this.qtdTitulos, this.valorTitulos);
-            System.out.println(trailer.generateTrailer());
+            logger.info(trailer.generateTrailer());
 
-            System.out.println("----------------------- fim registros -----------------------");
+            logger.info("----------------------- fim registros -----------------------");
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(GeradorCNABHarpia.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error(null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(GeradorCNABHarpia.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error(null, ex);
         }
     }
 
@@ -255,16 +261,17 @@ public class GeradorCNABHarpia implements GeradorCNAB {
 
         return valorPago.doubleValue();
     }
-    
+
     /**
      * Formatar casas decimais.
+     *
      * @param valor - valor
      * @param decimais - numero de casas decimais
      * @return novo numero
      */
-    public static double formatarDecimais(double valor, int decimais){
-       BigDecimal novoValor = BigDecimal.valueOf(valor).setScale(decimais, RoundingMode.HALF_UP);
-        
+    public static double formatarDecimais(double valor, int decimais) {
+        BigDecimal novoValor = BigDecimal.valueOf(valor).setScale(decimais, RoundingMode.HALF_UP);
+
         return novoValor.doubleValue();
     }
 }

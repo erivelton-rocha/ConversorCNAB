@@ -11,13 +11,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import org.apache.log4j.Logger;
+
 
 /**
  *
  * @author ANALISTA_SISTEMA
  */
 public class CNABUtils {
-
+    private static final Logger logger = Logger.getLogger(CNABUtils.class.getName());
+ 
     public static InfoTitulo info;
 
     /**
@@ -93,7 +96,8 @@ public class CNABUtils {
     }
 
     public static InfoTitulo getTituloInfo(String titulo, int codigoBanco) {
-
+        info = null;
+    
         String url = "jdbc:postgresql://10.147.18.2:5432/GIX"; // URL de conexão para PostgreSQL
         String user = "frioriobi";
         String password = "FR5aB2ClHG3i";
@@ -105,25 +109,27 @@ public class CNABUtils {
     
 
             try (Connection conn = DriverManager.getConnection(url, user, password)) {
-                String query = "SELECT crecempe, crecnbco "
-                        + "FROM arqcrec "
-                        + "WHERE crecdocu = ? "
-                        + "AND crecbanc = ? "
-                        + "ORDER BY crecemis DESC "
+                String query = "SELECT brecempe, brecnbco "
+                        + "FROM arqbrec "
+                        + "WHERE brecdocu = ? "
+                        + "AND brecbanc = ? "
+                        + "ORDER BY brecemis DESC "
                         + "LIMIT 1";
-            
 
                 try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                    stmt.setString(1, titulo);
+                    logger.info(query);
+                    stmt.setInt(1, Integer.parseInt(titulo));
                     stmt.setInt(2, codigoBanco);
 
                     try (ResultSet rs = stmt.executeQuery()) {
                         if (rs.next()) {
-                            String codigoEmpresa = rs.getString("crecempe");
-                            String numeroBancario = rs.getString("crecnbco");
-                          
+                            String codigoEmpresa = rs.getString("brecempe");
+                            String numeroBancario = rs.getString("brecnbco");
+                            numeroBancario = numeroBancario.trim();
 
                             info = new InfoTitulo(codigoEmpresa, numeroBancario);
+                        }else{
+                           logger.info("Nenhum registro encontrado para o título: " + titulo + ", banco: " + codigoBanco); 
                         }
                     }
                 }
@@ -132,7 +138,7 @@ public class CNABUtils {
 //            System.out.println("Erro: O parâmetro 'titulo' não é um número válido.");
             e.printStackTrace();
         } catch (SQLException e) {
-            System.out.println("Erro ao conectar ao banco de dados ou executar a consulta: " + e.getMessage());
+            logger.info("Erro ao conectar ao banco de dados ou executar a consulta: " + e.getMessage());
             e.printStackTrace();
         }
 

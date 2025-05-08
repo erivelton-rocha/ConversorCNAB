@@ -6,6 +6,7 @@ package br.com.friorio.conversorcnab.conversorcnab;
 
 import java.time.LocalDate;
 import br.com.friorio.conversorcnab.utils.CNABUtils;
+import org.openxmlformats.schemas.drawingml.x2006.main.STBlipCompression;
 
 /**
  *
@@ -15,11 +16,11 @@ public class CNABDetalhe {
 
     public static final Integer ID_REGISTRO = 1;
     public static final Integer TIPO_INSCRICAO = 2; // 01- CPF / 02-CNPJ
-    private String tpnaemp; // empresa pos 38 a 40
+    private String tpnaemp; // empresa pos 38 a 41
     private String documento; // pos 41 a 49 - size 9
 //    dprivate String serie; //serie  / pos 47-48 - size 1
 //    private String parcela; // pos 48 - size 2
-    private int tpnabco; //identificacao do titulo pos 71-82 - size 12
+    private String tpnabco; //numero bancario do titulo pos 71-73 - size 3
     private int tpnaocor; // id ocorrencia pos 109 - size 2
     private LocalDate tpnadpag; // data ocorrenci no banco / pos 111 - size 6 DDMMAA
     private LocalDate tpnavenc; // data vencimento / pos 147-152 - size 6 DDMMAA
@@ -31,28 +32,30 @@ public class CNABDetalhe {
     private Double tpnajuro; // juros de mora / pos 267-279 - size 13
     private LocalDate tpnadcrd; //data do credito / pos 296 - size 6 DDMMAA
     private int tpnamotv; // motivo da rejeicao / pos 319 a 328 - size 10
+    private int qtdregistros; // quantidade de registros 394 a 400
 
     /**
      *
-     * @param documento  documento
-     * @param tpnaemp codigo empresa
-     * @param idbanco codigo do banco
-     * @param tpnaocor  id ocorrencia no banco
-     * @param tpnadpag  data ocorrencia no banco
-     * @param tpnavenc  data vencimento
-     * @param valorTitulo  valor do titulo
-     * @param tpandsp  valor despesa para codigo de ocorrencia
-     * @param tpnaodsp  outras despesas
-     * @param tpnaabat  valor abatimento
-     * @param tpnavalo  valor pago
-     * @param tpnajuro juros de mora
-     * @param tpnadcrd  data de credito
-     * @param tpnamotv  motivo rejeicao
+     * @param tpnaemp
+     * @param documento
+     * @param tpnabco
+     * @param tpnaocor
+     * @param tpnadpag
+     * @param tpnavenc
+     * @param valorTitulo
+     * @param tpandsp
+     * @param tpnaodsp
+     * @param tpnaabat
+     * @param tpnavalo
+     * @param tpnajuro
+     * @param tpnadcrd
+     * @param tpnamotv
+     * @param qtdregistros
      */
-    public CNABDetalhe(String documento,String tpnaemp ,int idbanco, int tpnaocor, LocalDate tpnadpag, LocalDate tpnavenc, Double valorTitulo, Double tpandsp, Double tpnaodsp, Double tpnaabat, Double tpnavalo, Double tpnajuro, LocalDate tpnadcrd, int tpnamotv) {
-        this.documento = documento;
+    public CNABDetalhe(String tpnaemp, String documento, String tpnabco, int tpnaocor, LocalDate tpnadpag, LocalDate tpnavenc, Double valorTitulo, Double tpandsp, Double tpnaodsp, Double tpnaabat, Double tpnavalo, Double tpnajuro, LocalDate tpnadcrd, int tpnamotv, int qtdregistros) {
         this.tpnaemp = tpnaemp;
-        this.tpnabco = idbanco;
+        this.documento = documento;
+        this.tpnabco = tpnabco;
         this.tpnaocor = tpnaocor;
         this.tpnadpag = tpnadpag;
         this.tpnavenc = tpnavenc;
@@ -64,6 +67,7 @@ public class CNABDetalhe {
         this.tpnajuro = tpnajuro;
         this.tpnadcrd = tpnadcrd;
         this.tpnamotv = tpnamotv;
+        this.qtdregistros = qtdregistros;
     }
 
     public CNABDetalhe() {
@@ -93,11 +97,11 @@ public class CNABDetalhe {
 //        this.parcela = parcela;
 //    }
 
-    public int getTpnabco() {
+    public String getTpnabco() {
         return tpnabco;
     }
 
-    public void setTpnabco(int tpnabco) {
+    public void setTpnabco(String tpnabco) {
         this.tpnabco = tpnabco;
     }
 
@@ -226,97 +230,184 @@ public class CNABDetalhe {
         this.tpnamotv = tpnamotv;
     }
 
+    public String getTpnaemp() {
+        return tpnaemp;
+    }
+
+    public void setTpnaemp(String tpnaemp) {
+        this.tpnaemp = tpnaemp;
+    }
+
+    public int getQtdregistros() {
+        return qtdregistros;
+    }
+
+    public void setQtdregistros(int qtdregistros) {
+        this.qtdregistros = qtdregistros;
+    }
+
+    /**
+     * Gerar Detalhe de registro
+     *
+     * @return detalhe
+     */
     public String generateDetalhe() {
 
         StringBuilder detalhe = new StringBuilder();
 
-        // pos 1 ID_REGISTRO
+        // pos 1 ID_REGISTRO 1 - 1
         detalhe.append(CNABUtils.preencherCampo(ID_REGISTRO, 1, 'D', '0', 'N'));
-        // 01- CPF / 02-CNPJ pos 2 a 3
+
+        // 01- CPF / 02-CNPJ pos 2 a 3 -2
         detalhe.append(CNABUtils.preencherCampo(TIPO_INSCRICAO, 2, 'D', '0', 'N'));
 
-        // ZEROS 4 a 40
-        detalhe.append(CNABUtils.preencherCampo("0", 37, 'E', '0', 'S'));
-        // documento pos 41 a 49 - size 9
-        detalhe.append(CNABUtils.preencherCampo(documento, 9, 'D', ' ', 'S'));
+        // Zeros
+        detalhe.append(CNABUtils.preencherCampo(0, 34, 'D', '0', 'N'));
 
-        // branco 50 a 63
-        detalhe.append(CNABUtils.preencherCampo(" ", 13, 'E', ' ', 'S'));
+        // empresa
+        detalhe.append(CNABUtils.preencherCampo(tpnaemp, 3, 'D', '0', 'N'));
 
-        // zeros 64 A 70
-        detalhe.append(CNABUtils.preencherCampo(0, 8, 'E', '0', 'S'));
-
-        // id do banco 71 a 73
-        detalhe.append(CNABUtils.preencherCampo(tpnabco, 3, 'D', '0', 'N'));
-        
-        detalhe.append(CNABUtils.preencherCampo(valorTitulo, 9, 'D', '0', 'N'));
-
-        // zeros 83 a 92 - size 10 - uso do banco
-        detalhe.append(CNABUtils.preencherCampo(0, 10, 'E', '0', 'S'));
-        
-        
-        // zeros 93 a 104 - size 12
-         detalhe.append(CNABUtils.preencherCampo("0", 12, 'E', '0', 'S'));
-        
-        
-        // branco 105 - size 1
-        detalhe.append(CNABUtils.preencherCampo(" ", 1, 'E', ' ', 'S'));
-
-        // zero pos 106 - a 108
-        detalhe.append(CNABUtils.preencherCampo("0", 1, 'E', '0', 'S'));
-
-        // id ocorrencia pos 109 110 - size 2 
-        detalhe.append(CNABUtils.preencherCampo(tpnaocor, 2, 'D', '0', 'N'));
-
-        // data ocorrenci no banco / pos 111 a 116 - size 6 DDMMAA
-        detalhe.append(CNABUtils.preencherCampo(tpnadpag, 6, 'E', ' ', 'D'));
-
-        // documento pos 117 a 126
+        // documento 38 A 50
         detalhe.append(CNABUtils.preencherCampo(documento, 9, 'E', '0', 'S'));
 
-        // branco pos 127 - size 1
+        // espaços 50 a 62 - 13
+        detalhe.append(CNABUtils.preencherCampo(" ", 13, 'E', ' ', 'S'));
+
+        // zeros 63 a 70 
+        detalhe.append(CNABUtils.preencherCampo(0, 8, 'D', '0', 'N'));
+
+        // documento 71 a 82 - 12
+        detalhe.append(CNABUtils.preencherCampo(tpnabco, 12, 'E', '0', 'S'));
+
+        // zeros 83 a 104
+        detalhe.append(CNABUtils.preencherCampo(0, 22, 'D', '0', 'N'));
+
+        // branco 105 a 105 -1
         detalhe.append(CNABUtils.preencherCampo(" ", 1, 'E', ' ', 'S'));
 
-        // data vencimento / pos 147-152 - size 6 DDMMAA
-        detalhe.append(CNABUtils.preencherCampo(tpnavenc, 6, 'E', ' ', 'D'));
+        // zeros 106 a 107 -2
+        detalhe.append(CNABUtils.preencherCampo(0, 2, 'E', '0', 'S'));
 
-        // valor do titulo / pos 153-165 - size 13
-        detalhe.append(CNABUtils.preencherCampo(valorTitulo, 13, 'D', ' ', 'N'));
+        // carteira 108 a 108 - 1        
+        detalhe.append(CNABUtils.preencherCampo(0, 1, 'E', '0', 'S'));
 
-        // branco pos 166 a 175
-        detalhe.append(CNABUtils.preencherCampo(" ", 9, 'E', ' ', 'S'));
+        // identificação ocorrencia 109 a 110 - 2
+        detalhe.append(CNABUtils.preencherCampo(tpnaocor, 2, 'D', '0', 'N'));
 
-        // despesa cobranca para codigo ocorrencia / pos 176-188 - size 13 
-        detalhe.append(CNABUtils.preencherCampo(tpandsp, 13, 'D', '0', 'N'));
+        // data ocorrencia no banco 
+        // 111 a 116 - 6
+        detalhe.append(CNABUtils.preencherCampo(tpnadpag, 6, 'D', '0', 'D'));
 
-        // outras despesas / pos 189-201 - size 13
-        detalhe.append(CNABUtils.preencherCampo(tpnaodsp, 13, 'D', '0', 'N'));
+        // identificação do titulo 117 a 126 - 10
+        detalhe.append(CNABUtils.preencherCampo(documento, 10, 'E', ' ', 'S'));
 
-        // branco pos 202 a 227
-        detalhe.append(CNABUtils.preencherCampo(" ", 25, 'E', ' ', 'S'));
+     
+        // identficação bancaria
+        // numero bancario - 127 a 146 - 20
+        detalhe.append(CNABUtils.preencherCampo(tpnabco, 20, 'D', '0', 'S'));
 
-        // valor abatimento / pos 228-240 - size 13
-        detalhe.append(CNABUtils.preencherCampo(tpnaabat, 12, 'D', '0', 'N'));
+        // vencimento do titulo 147 a 152 - 6
+        detalhe.append(CNABUtils.preencherCampo(tpnavenc, 6, 'E', '0', 'D'));
 
-        // branco pos 241 a 253
-        detalhe.append(CNABUtils.preencherCampo(" ", 36, 'E', ' ', 'S'));
+        // valor do titulo 
+        // 153 A 165 - 13
+        detalhe.append(CNABUtils.preencherCampo(valorTitulo, 13, 'D', '0', 'N'));
 
-        // valor pago/ pos 254-266 - size 13
+        // zeros 166 a 168 - 3
+        detalhe.append(CNABUtils.preencherCampo(0, 3, 'D', '0', 'N'));
+
+        // agencia cobradora
+        //zeros 169 a 173 - 5
+          detalhe.append(CNABUtils.preencherCampo(0, 5, 'D', '0', 'N'));
+          
+        // especie do titulo
+        // 174 a 175 - 2
+        detalhe.append(CNABUtils.preencherCampo(" ", 2, 'E', ' ', 'S'));
+        
+        // despesas de cobrança para os codigos de ocorrencia
+        // 176 a 188 - 13
+        detalhe.append(CNABUtils.preencherCampo(0, 13, 'D', '0', 'N'));
+        
+        // outras despesas | custo de protesto
+        // 189 a 201 - 13
+        detalhe.append(CNABUtils.preencherCampo(0, 13, 'D', '0', 'N'));
+        
+        // juros opereção em atraso
+        // 202 a 214 - 13
+        detalhe.append(CNABUtils.preencherCampo(0, 13, 'D', '0', 'N'));
+        
+        // iof devido
+        // 215 a 227 - 13
+        detalhe.append(CNABUtils.preencherCampo(0, 13, 'D', '0', 'N'));
+        
+        // abatimento concedido sobre o tituLo
+        // 228 a 240 - 13
+        detalhe.append(CNABUtils.preencherCampo(0, 13, 'D', '0', 'N'));
+        
+        // desconto concedido
+        // 241 a 253 - 13
+        detalhe.append(CNABUtils.preencherCampo(0, 13, 'D', '0', 'N'));
+        
+        
+        // valor pago
+        // 254 a 266 - 13
         detalhe.append(CNABUtils.preencherCampo(tpnavalo, 13, 'D', '0', 'N'));
-
-        // juros de mora / pos 267-279 - size 13
+        
+        // juros de mora
+        // 267 a 279 - 13
         detalhe.append(CNABUtils.preencherCampo(tpnajuro, 13, 'D', '0', 'N'));
-
-        // branco 280 a 295
-        detalhe.append(CNABUtils.preencherCampo(" ", 15, 'E', ' ', 'S'));
-
-        //data do credito / pos 296 a 301 - size 6 DDMMAA
+        
+        // outros creditos
+        // 280 a 292 - 13
+        detalhe.append(CNABUtils.preencherCampo(0, 13, 'D', '0', 'N'));
+        
+        // espacços 293 a 294 - 2
+        detalhe.append(CNABUtils.preencherCampo(" ", 2, 'E', ' ', 'S'));
+         
+        // motivo do codigo de ocorrencia 25
+        // 295 a 295 - 1: A - Aceito | D - Desprezado
+        detalhe.append(CNABUtils.preencherCampo(" ", 1, 'E', ' ', 'S'));
+        
+        // data do credito
+        // 296 a 301 - 6 DDMMAA
         detalhe.append(CNABUtils.preencherCampo(tpnadcrd, 6, 'E', ' ', 'D'));
+        
+        // espaços 305 a 314 - 10
+        detalhe.append(CNABUtils.preencherCampo(" ", 10, 'E', ' ', 'S'));
+        
+        
+        // quando cheque bradesco
+        // 315 a 318 - 4
+        detalhe.append(CNABUtils.preencherCampo(0, 4, 'D', '0', 'N'));
+        /**
+         * motivo de rejeições para codigos de ocorrencia das posicoes 109 a 110
+         * 319 a 328 - 10
+          *
+         */
+        detalhe.append(CNABUtils.preencherCampo(0, 10, 'D', '0', 'N'));
+        
+        // espaços 329 a 368 - 40
+         detalhe.append(CNABUtils.preencherCampo(" ", 40, 'E', ' ', 'S'));
+         
+        // numero do cartorio
+        // 369 a 370 - 2    
+        detalhe.append(CNABUtils.preencherCampo(0, 2, 'D', '0', 'N'));
+        
+        // numero do protocolo
+        // 371 a 380 - 10
+        detalhe.append(CNABUtils.preencherCampo(" ", 10, 'E', ' ', 'S'));
+        
+        // especaços 381 a 394 - 14
+         detalhe.append(CNABUtils.preencherCampo(" ", 14, 'E', ' ', 'S'));
+        
+        // numero sequencial de registro
+        // 395 a 400 - 6
+        detalhe.append(CNABUtils.preencherCampo(qtdregistros, 6, 'D', '0', 'N'));
 
-        // branco 302 a 318
-        detalhe.append(CNABUtils.preencherCampo(" ", 16, 'E', ' ', 'S'));
-        // motivo da rejeicao / pos 319 a 328 - size 10
-        detalhe.append(CNABUtils.preencherCampo(tpnamotv, 10, 'D', '0', 'N'));
+        // 
+        /**
+         * Return
+         */
         return detalhe.toString();
     }
 
